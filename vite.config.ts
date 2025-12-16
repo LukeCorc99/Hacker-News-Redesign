@@ -6,6 +6,7 @@ import type { ViteUserConfigExport } from 'vitest/config'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/HackerNewsAssignment/',
   test: {
     globals: true,
     environment: 'jsdom',
