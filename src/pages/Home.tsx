@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { QueryProvider } from '../providers/QueryProvider'
 import { Header } from '../components/Header'
 import { PostList } from '../components/PostList'
 import type { FeedType, ViewMode } from '../components/PostList'
@@ -7,7 +8,7 @@ import { SubmitPostModal } from '../components/SubmitPostModal'
 
 type AuthAction = 'login' | 'register' | null
 
-export default function Home() {
+function HomeContent() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [authAction, setAuthAction] = useState<AuthAction>(null)
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false)
@@ -69,5 +70,13 @@ export default function Home() {
             )}
             {isSubmitModalOpen && <SubmitPostModal onClose={handleCloseSubmit} />}
         </>
+    )
+}
+
+export default function Home() {
+    return (
+        <QueryProvider>
+            <HomeContent />
+        </QueryProvider>
     )
 }

@@ -2,8 +2,19 @@ import type { HackerNewsStory } from '../types/story'
 
 const BASE_URL = 'https://hacker-news.firebaseio.com/v0'
 
-export const fetchStoryIds = async (type: 'top' | 'new'): Promise<number[]> => {
-    const response = await fetch(`${BASE_URL}/${type}stories.json`)
+export const fetchStoryIds = async (
+    type: 'top' | 'new' | 'ask' | 'show' | 'job'
+): Promise<number[]> => {
+    const endpointMap = {
+        top: 'topstories',
+        new: 'newstories',
+        ask: 'askstories',
+        show: 'showstories',
+        job: 'jobstories',
+    }
+
+    const endpoint = endpointMap[type]
+    const response = await fetch(`${BASE_URL}/${endpoint}.json`)
 
     if (!response.ok) {
         throw new Error(`Failed to fetch ${type} stories`)

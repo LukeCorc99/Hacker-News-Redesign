@@ -7,8 +7,13 @@ import {
   Star,
   Briefcase,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
+import { useState } from 'react'
+import { useHackerNews } from '../../hooks/useHackerNews'
+import { PostCard } from '../PostCard'
 import styles from './PostList.module.css'
 
 export type FeedType = 'top' | 'new' | 'past' | 'ask' | 'show' | 'jobs'
@@ -45,8 +50,26 @@ export default function PostList({
   viewMode,
   onChangeViewMode,
 }: PostListProps) {
+  const [page, setPage] = useState(1)
   const FeedIcon = feedIconMap[feedType]
   const feedLabel = feedLabelMap[feedType]
+
+  const { stories, isLoading, error, totalPages } = useHackerNews({ feedType, page })
+
+  const handleFeedTypeChange = (newFeedType: FeedType) => {
+    setPage(1)
+    onChangeFeedType(newFeedType)
+  }
+
+  const handlePrevPage = () => {
+    setPage((prev) => Math.max(1, prev - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleNextPage = () => {
+    setPage((prev) => Math.min(totalPages, prev + 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <section className={styles.wrap}>
@@ -56,7 +79,7 @@ export default function PostList({
             className={styles.select}
             value={feedType}
             onChange={(e) => {
-              onChangeFeedType(e.target.value as FeedType)
+              handleFeedTypeChange(e.target.value as FeedType)
               e.currentTarget.blur()
             }}
             data-testid="feed-select"
@@ -107,9 +130,77 @@ export default function PostList({
         </div>
       </div>
 
-      <div className={styles.posts} data-testid="posts" data-view={viewMode}>
-        {/* existing list/grid rendering*/}
-      </div>
+      {isLoading && (
+        <div className={styles.loading} data-testid="loading">
+          <div className={styles.spinner} aria-label="Loading stories" />
+          <p>Loading stories...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className={styles.error} data-testid="error" role="alert">
+          <p>Failed to load stories. Please try again.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className={styles.retryBtn}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!isLoading && !error && stories.length > 0 && (
+        <>
+          <div 
+            className={`${styles.posts} ${styles[viewMode]}`}
+            data-testid="posts" 
+            data-view={viewMode}
+          >
+            {stories.map((story, index) => (
+              <PostCard
+                key={story.id}
+                story={story}
+                viewMode={viewMode}
+                rank={(page - 1) * 30 + index + 1}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                onClick={handlePrevPage}
+                disabled={page === 1}
+                className={styles.paginationBtn}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={18} />
+                Previous
+              </button>
+
+              <span className={styles.pageInfo}>
+                Page {page} of {totalPages}
+              </span>
+
+              <button
+                onClick={handleNextPage}
+                disabled={page >= totalPages}
+                className={styles.paginationBtn}
+                aria-label="Next page"
+              >
+                Next
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {!isLoading && !error && stories.length === 0 && (
+        <div className={styles.empty} data-testid="empty">
+          <p>No stories found</p>
+        </div>
+      )}
     </section>
   )
 }
