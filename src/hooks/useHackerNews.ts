@@ -14,12 +14,12 @@ export function useHackerNews({ feedType, page }: UseHackerNewsOptions) {
     const feedTypeMap: Record<FeedType, 'top' | 'new' | 'ask' | 'show' | 'job'> = {
         top: 'top',
         new: 'new',
-        past: 'new',
         ask: 'ask',
         show: 'show',
         jobs: 'job',
     }
     const apiType = feedTypeMap[feedType]
+    
     const {
         data: storyIds = [],
         isLoading: isLoadingIds,
@@ -32,7 +32,6 @@ export function useHackerNews({ feedType, page }: UseHackerNewsOptions) {
     const startIndex = (page - 1) * STORIES_PER_PAGE
     const endIndex = startIndex + STORIES_PER_PAGE
     const paginatedIds = storyIds.slice(startIndex, endIndex)
-
 
     const {
         data: stories = [],

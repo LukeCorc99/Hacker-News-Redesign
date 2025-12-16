@@ -13,10 +13,10 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useHackerNews } from '../../hooks/useHackerNews'
-import { PostCard } from '../PostCard'
+import PostCard from '../PostCard/PostCard'
 import styles from './PostList.module.css'
 
-export type FeedType = 'top' | 'new' | 'past' | 'ask' | 'show' | 'jobs'
+export type FeedType = 'top' | 'new' | 'ask' | 'show' | 'jobs'
 export type ViewMode = 'list' | 'grid'
 
 type PostListProps = {
@@ -29,7 +29,6 @@ type PostListProps = {
 const feedIconMap: Record<FeedType, LucideIcon> = {
   top: Flame,
   new: Clock,
-  past: Clock,
   ask: MessageCircleQuestion,
   show: Star,
   jobs: Briefcase,
@@ -38,7 +37,6 @@ const feedIconMap: Record<FeedType, LucideIcon> = {
 const feedLabelMap: Record<FeedType, string> = {
   top: 'Top',
   new: 'New',
-  past: 'Past',
   ask: 'Ask HN',
   show: 'Show HN',
   jobs: 'Jobs',
@@ -74,27 +72,8 @@ export default function PostList({
   return (
     <section className={styles.wrap}>
       <div className={styles.topbar}>
-        <div className={styles.picker}>
-          <select
-            className={styles.select}
-            value={feedType}
-            onChange={(e) => {
-              handleFeedTypeChange(e.target.value as FeedType)
-              e.currentTarget.blur()
-            }}
-            data-testid="feed-select"
-            aria-label="Choose feed"
-          >
-            <optgroup label="Sort by">
-              {Object.entries(feedLabelMap).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </optgroup>
-          </select>
-
-          <button type="button" className={styles.pickerBtn} aria-label="Choose feed">
+        <div className={styles.pickerWrapper}>
+          <div className={styles.pickerDisplay}>
             <span className={styles.pickerIcon}>
               <FeedIcon size={16} aria-hidden="true" />
             </span>
@@ -102,7 +81,20 @@ export default function PostList({
             <span className={styles.chev} aria-hidden="true">
               <ChevronDown size={16} />
             </span>
-          </button>
+          </div>
+          <select
+            className={styles.pickerSelect}
+            value={feedType}
+            onChange={(e) => handleFeedTypeChange(e.target.value as FeedType)}
+            data-testid="feed-select"
+            aria-label="Choose feed"
+          >
+            {Object.entries(feedLabelMap).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.viewToggle} role="group" aria-label="View mode">
