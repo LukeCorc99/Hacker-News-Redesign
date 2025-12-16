@@ -1,0 +1,101 @@
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 14px 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 0 14px;
+}
+
+.picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pickerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.9);
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.picker:hover .pickerBtn {
+  background: rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+.pickerIcon {
+  display: inline-flex;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.pickerText {
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.chev {
+  display: inline-flex;
+  color: rgba(0, 0, 0, 0.7);
+  transition: transform 160ms ease;
+}
+
+.viewToggle {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.viewBtn {
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.72);
+  transition: background-color 120ms ease, transform 120ms ease, color 120ms ease;
+}
+
+.viewBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.95);
+  transform: translateY(-1px);
+}
+
+.viewBtn[aria-pressed='true'] {
+  background: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.95);
+  transform: translateY(0);
+}
+
+.pickerBtn:focus-visible,
+.viewBtn:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+.posts {
+  width: 100%;
+}
