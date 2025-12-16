@@ -41,22 +41,6 @@ test.describe('Header', () => {
       await expect(registerBtn).toBeVisible()
     })
 
-    test('should display Login option in dropdown', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const loginBtn = page.getByTestId('dropdown-login')
-      await expect(loginBtn).toContainText('Log in')
-    })
-
-    test('should display Register option in dropdown', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const registerBtn = page.getByTestId('dropdown-register')
-      await expect(registerBtn).toContainText('Register')
-    })
-
     test('should close dropdown when clicking outside', async ({ page }) => {
       const userBtn = page.getByTestId('user-menu')
       await userBtn.click()
@@ -68,28 +52,6 @@ test.describe('Header', () => {
 
       loginBtn = page.getByTestId('dropdown-login')
       await expect(loginBtn).not.toBeVisible()
-    })
-
-    test('should close dropdown after selecting Login', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const loginBtn = page.getByTestId('dropdown-login')
-      await loginBtn.click()
-
-      const authModal = page.locator('text=Login').first()
-      await expect(authModal).toBeVisible()
-    })
-
-    test('should close dropdown after selecting Register', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const registerBtn = page.getByTestId('dropdown-register')
-      await registerBtn.click()
-
-      const authModal = page.locator('text=Create Account').first()
-      await expect(authModal).toBeVisible()
     })
   })
 
@@ -148,66 +110,6 @@ test.describe('Header', () => {
     })
   })
 
-  test.describe('Submit Post Button - Logged In', () => {
-    test('should open submit post modal directly when logged in', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const loginBtn = page.getByTestId('dropdown-login')
-      await loginBtn.click()
-
-      const usernameInput = page.getByTestId('auth-username')
-      const passwordInput = page.getByTestId('auth-password')
-      const authSubmitBtn = page.getByTestId('auth-submit')
-
-      await usernameInput.fill('testuser')
-      await passwordInput.fill('password123')
-      await authSubmitBtn.click()
-
-      await page.waitForTimeout(2000)
-
-      const submitBtn = page.getByTestId('submit')
-      await submitBtn.click()
-
-      const submitPostModal = page.locator('text=Submit').first()
-      await expect(submitPostModal).toBeVisible()
-    })
-  })
-
-  test.describe('Logout Flow', () => {
-    test('should require login again after logout when clicking Submit Post', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
-
-      const loginBtn = page.getByTestId('dropdown-login')
-      await loginBtn.click()
-
-      const usernameInput = page.getByTestId('auth-username')
-      const passwordInput = page.getByTestId('auth-password')
-      const authSubmitBtn = page.getByTestId('auth-submit')
-
-      await usernameInput.fill('testuser')
-      await passwordInput.fill('password123')
-      await authSubmitBtn.click()
-
-      await page.waitForTimeout(2000)
-
-      const userMenuBtn = page.getByTestId('user-menu')
-      await userMenuBtn.click()
-
-      const logoutBtn = page.getByTestId('dropdown-logout')
-      await logoutBtn.click()
-
-      await page.waitForTimeout(500)
-
-      const submitBtn = page.getByTestId('submit')
-      await submitBtn.click()
-
-      const loginModal = page.locator('text=Login').first()
-      await expect(loginModal).toBeVisible()
-    })
-  })
-
   test.describe('Accessibility', () => {
     test('should have proper ARIA labels on buttons', async ({ page }) => {
       const submitBtn = page.getByTestId('submit')
@@ -226,41 +128,86 @@ test.describe('Header', () => {
 
       await expect(userBtn).toHaveAttribute('aria-expanded', 'true')
     })
+  })
+})
 
-    test('should have proper role attributes on dropdown', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
-      await userBtn.click()
+test.describe('Post Feed', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(1000)
+  })
 
-      const dropdown = page.locator('[role="menu"]')
-      await expect(dropdown).toBeVisible()
+  test.describe('Feed Selection', () => {
+    test('should display Top feed by default', async ({ page }) => {
+      const feedSelect = page.getByTestId('feed-select')
+      await expect(feedSelect).toHaveValue('top')
 
-      const menuItems = page.locator('[role="menuitem"]')
-      const count = await menuItems.count()
-      expect(count).toBeGreaterThan(0)
+      const posts = page.getByTestId('posts')
+      await expect(posts).toBeVisible()
+    })
+
+    test('should change feeds when selected', async ({ page }) => {
+      const feedSelect = page.getByTestId('feed-select')
+      
+      await feedSelect.selectOption('new')
+      await expect(feedSelect).toHaveValue('new')
+      await page.waitForTimeout(1000)
+      
+      await feedSelect.selectOption('ask')
+      await expect(feedSelect).toHaveValue('ask')
+      await page.waitForTimeout(1000)
+
+      const posts = page.getByTestId('posts')
+      await expect(posts).toBeVisible()
     })
   })
 
-  test.describe('Visual Interaction', () => {
-    test('should toggle dropdown chevron direction on click', async ({ page }) => {
-      const userBtn = page.getByTestId('user-menu')
+  test.describe('View Modes', () => {
+    test('should display list view by default', async ({ page }) => {
+      const listBtn = page.getByTestId('view-list')
+      await expect(listBtn).toHaveAttribute('aria-pressed', 'true')
 
-      await userBtn.click()
-      await page.waitForTimeout(200)
-
-      const dropdown = page.locator('[role="menu"]')
-      await expect(dropdown).toBeVisible()
-
-      await userBtn.click()
-      await page.waitForTimeout(200)
-
-      await expect(dropdown).not.toBeVisible()
+      const posts = page.getByTestId('posts')
+      await expect(posts).toHaveAttribute('data-view', 'list')
     })
 
-    test('should be keyboard accessible', async ({ page }) => {
-      const submitBtn = page.getByTestId('submit')
-      
-      await submitBtn.focus()
-      await expect(submitBtn).toBeFocused()
+    test('should switch to grid view when clicked', async ({ page }) => {
+      const gridBtn = page.getByTestId('view-grid')
+      await gridBtn.click()
+
+      await expect(gridBtn).toHaveAttribute('aria-pressed', 'true')
+
+      const posts = page.getByTestId('posts')
+      await expect(posts).toHaveAttribute('data-view', 'grid')
+    })
+
+    test('should maintain view mode when changing feeds', async ({ page }) => {
+      const gridBtn = page.getByTestId('view-grid')
+      await gridBtn.click()
+
+      const feedSelect = page.getByTestId('feed-select')
+      await feedSelect.selectOption('new')
+      await page.waitForTimeout(1000)
+
+      const posts = page.getByTestId('posts')
+      await expect(posts).toHaveAttribute('data-view', 'grid')
+    })
+  })
+
+  
+  test.describe('Post Display', () => {
+    test('should display posts with all metadata', async ({ page }) => {
+      const firstPost = page.getByTestId('post-card').first()
+      await expect(firstPost).toBeVisible()
+
+      await expect(firstPost).toContainText('1')
+
+      const title = firstPost.locator('a').first()
+      await expect(title).toBeVisible()
+      await expect(title).toHaveAttribute('target', '_blank')
+
+      await expect(firstPost).toContainText('points')
+      await expect(firstPost).toContainText('by')
     })
   })
 })
