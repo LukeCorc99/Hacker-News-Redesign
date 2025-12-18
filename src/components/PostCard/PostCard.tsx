@@ -1,5 +1,5 @@
 import { ExternalLink, MessageSquare, TrendingUp, Clock, Trash2, Edit2 } from 'lucide-react'
-import type { HackerNewsStory } from '../../types/story'
+import type { PostCardProps } from '../../types'
 import styles from './PostCard.module.css'
 
 const getTimeAgo = (timestamp: number): string => {
@@ -15,14 +15,6 @@ const getTimeAgo = (timestamp: number): string => {
   return `${days}d ago`
 }
 
-type PostCardProps = {
-  story: HackerNewsStory
-  viewMode: 'list' | 'grid'
-  rank: number
-  isUserPost?: boolean
-  onEdit?: (post: HackerNewsStory) => void
-  onDelete?: (postId: number) => void
-}
 
 export default function PostCard({ story, viewMode, rank, isUserPost, onEdit, onDelete }: PostCardProps) {
   const formattedTime = getTimeAgo(story.time)

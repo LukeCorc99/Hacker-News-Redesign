@@ -9,6 +9,3 @@ export interface HackerNewsStory {
   type: string
   kids?: number[]
 }
-
-export type StoryType = 'top' | 'new'
-export type ViewMode = 'grid' | 'list'

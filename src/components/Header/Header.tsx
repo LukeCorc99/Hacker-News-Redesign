@@ -1,16 +1,7 @@
 import { SquarePen, UserRound, ChevronDown, LogIn, UserPlus, Search } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import type { HeaderProps } from '../../types'
 import styles from './Header.module.css'
-
-type HeaderProps = {
-  onLogin: (action: 'login' | 'register') => void
-  onSubmit: () => void
-  isLoggedIn: boolean
-  onLogout: () => void
-  onSearch: (query: string) => void
-  onSearchSubmit?: (query: string) => void
-  externalSearchQuery?: string
-}
 
 export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSearch, onSearchSubmit, externalSearchQuery = '' }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)

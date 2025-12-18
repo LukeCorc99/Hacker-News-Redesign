@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react'
 import { QueryProvider } from '../providers/QueryProvider'
 import { Header } from '../components/Header'
 import { PostList } from '../components/PostList'
-import type { FeedType, ViewMode } from '../components/PostList'
+import type { FeedType, ViewMode } from '../types'
 import { AuthModal } from '../components/AuthModal'
 import { SubmitPostModal } from '../components/SubmitPostModal'
 import { useHackerNews } from '../hooks/useHackerNews'
-import type { HackerNewsStory } from '../types/story'
-
-type AuthAction = 'login' | 'register' | null
+import type { HackerNewsStory } from '../types'
+import type { AuthAction } from '../types'
 
 function HomeContent() {
     const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -26,7 +25,7 @@ function HomeContent() {
             return ''
         }
     })
-    const [authAction, setAuthAction] = useState<AuthAction>(null)
+    const [authAction, setAuthAction] = useState<AuthAction | null>(null)    
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false)
     const [feedType, setFeedType] = useState<FeedType>(() => {
         try {
@@ -49,7 +48,7 @@ function HomeContent() {
     const [searchQuery, setSearchQuery] = useState('')
 
     useHackerNews({ feedType, page: 1 })
-    
+
     useEffect(() => {
         try {
             localStorage.setItem('selectedViewMode', viewMode)

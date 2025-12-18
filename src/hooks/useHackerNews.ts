@@ -1,25 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchStoryIds, fetchStories } from '../services/hackerNewsApi'
-import type { FeedType } from '../components/PostList'
-import type { HackerNewsStory } from '../types/story'
+import type { FeedType } from '../types'
+import type { HackerNewsStory } from '../types'
+import type { UseHackerNewsOptions } from '../types'
 
 const STORIES_PER_PAGE = 30
 
-type UseHackerNewsOptions = {
-    feedType: FeedType
-    page: number
-}
-
 export function useHackerNews({ feedType, page }: UseHackerNewsOptions) {
-    const feedTypeMap: Record<FeedType, 'top' | 'new' | 'ask' | 'show' | 'job'> = {
+    const feedTypeMap: Record<FeedType, FeedType> = {
         top: 'top',
         new: 'new',
         ask: 'ask',
         show: 'show',
-        jobs: 'job',
+        job: 'job',
     }
     const apiType = feedTypeMap[feedType]
-    
+
     const {
         data: storyIds = [],
         isLoading: isLoadingIds,

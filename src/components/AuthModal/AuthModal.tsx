@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import { X, LogIn, UserPlus } from 'lucide-react'
 import styles from './AuthModal.module.css'
+import type { AuthModalProps } from '../../types'
 
-type AuthModalProps = {
-  action: 'login' | 'register'
-  onClose: () => void
-  onSuccess: (action: 'login' | 'register') => void
-}
 
 export default function AuthModal({ action, onClose, onSuccess }: AuthModalProps) {
   const [username, setUsername] = useState('')

@@ -1,11 +1,11 @@
-import type { HackerNewsStory } from '../types/story'
+import type { FeedType, HackerNewsStory } from '../types'
 
 const BASE_URL = 'https://hacker-news.firebaseio.com/v0'
 
 export const fetchStoryIds = async (
-    type: 'top' | 'new' | 'ask' | 'show' | 'job'
+    type: FeedType
 ): Promise<number[]> => {
-    const endpointMap = {
+    const endpointMap: Record<FeedType, string> = {
         top: 'topstories',
         new: 'newstories',
         ask: 'askstories',

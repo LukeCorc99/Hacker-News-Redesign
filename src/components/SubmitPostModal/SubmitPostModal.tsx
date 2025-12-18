@@ -1,13 +1,9 @@
 import { useState } from 'react'
 import { X, Link as LinkIcon } from 'lucide-react'
 import styles from './SubmitPostModal.module.css'
+import type { SubmitPostModalProps } from '../../types'
 
-type SubmitPostModalProps = {
-    onClose: () => void
-    editingPost?: { id: number; title: string; url: string | null; text: string | null } | null
-    onEditComplete?: () => void
-    username?: string
-}
+
 
 export default function SubmitPostModal({ onClose, editingPost, onEditComplete, username }: SubmitPostModalProps) {
     const [title, setTitle] = useState(editingPost?.title || '')

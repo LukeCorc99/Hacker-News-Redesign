@@ -12,11 +12,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type QueryProviderProps = {
-  children: ReactNode
-}
-
-export function QueryProvider({ children }: QueryProviderProps) {
+export function QueryProvider({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}

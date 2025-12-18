@@ -16,26 +16,17 @@ import * as Select from '@radix-ui/react-select'
 import { useHackerNews } from '../../hooks/useHackerNews'
 import PostCard from '../PostCard/PostCard'
 import styles from './PostList.module.css'
-import type { HackerNewsStory } from '../../types/story'
+import type { HackerNewsStory } from '../../types'
+import type { FeedType } from '../../types'
+import type { PostListProps } from '../../types'
 
-export type FeedType = 'top' | 'new' | 'ask' | 'show' | 'jobs'
-export type ViewMode = 'list' | 'grid'
-
-type PostListProps = {
-  feedType: FeedType
-  onChangeFeedType: (next: FeedType) => void
-  viewMode: ViewMode
-  onChangeViewMode: (next: ViewMode) => void
-  onEditPost?: (post: HackerNewsStory) => void
-  searchQuery?: string
-}
 
 const feedIconMap: Record<FeedType, LucideIcon> = {
   top: Flame,
   new: Clock,
   ask: MessageCircleQuestion,
   show: Star,
-  jobs: Briefcase,
+  job: Briefcase,
 }
 
 const feedLabelMap: Record<FeedType, string> = {
@@ -43,7 +34,7 @@ const feedLabelMap: Record<FeedType, string> = {
   new: 'New',
   ask: 'Ask',
   show: 'Show',
-  jobs: 'Jobs',
+  job: 'Jobs',
 }
 
 export default function PostList({
@@ -57,7 +48,7 @@ export default function PostList({
   const [page, setPage] = useState(1)
   const [searchPage, setSearchPage] = useState(1)
   const [searchResults, setSearchResults] = useState<HackerNewsStory[]>([])
-  const [searchFetchedPages, setSearchFetchedPages] = useState<number>(0)
+  const [searchFetchedPages, setSearchFetchedPages] = useState(0)
   const [refresh, setRefresh] = useState(0)
   const sectionRef = useRef<HTMLElement>(null)
   const FeedIcon = feedIconMap[feedType]
