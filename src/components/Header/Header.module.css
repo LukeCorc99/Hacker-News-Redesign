@@ -226,3 +226,76 @@
   outline: 2px solid #ff6600;
   outline-offset: -2px;
 }
+
+.mobileSearchBtn {
+  display: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 8px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.8);
+  transition: background-color 120ms ease, transform 120ms ease, color 120ms ease;
+}
+
+.mobileSearchBtn:hover {
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.95);
+  transform: translateY(-1px);
+}
+
+.mobileSearchBtn:active {
+  transform: translateY(0);
+}
+
+.mobileSearchBtn:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+.mobileSearchDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px 16px;
+  z-index: 9;
+  animation: slideDown 150ms ease;
+}
+
+.mobileSearchWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.mobileSearchWrapper .searchIcon {
+  position: absolute;
+  left: 10px;
+}
+
+.mobileSearchWrapper .searchInput {
+  width: 100%;
+}
+
+@media (max-width: 630px) {
+  .actionText {
+    display: none;
+  }
+
+  .searchWrapper {
+    display: none;
+  }
+
+  .mobileSearchBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header {
+    gap: 4px;
+  }
+}

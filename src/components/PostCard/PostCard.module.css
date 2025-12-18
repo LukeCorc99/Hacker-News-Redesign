@@ -180,3 +180,9 @@
     font-size: 13px;
   }
 }
+
+@media (max-width: 950px) {
+  .domain {
+    display: none;
+  }
+}

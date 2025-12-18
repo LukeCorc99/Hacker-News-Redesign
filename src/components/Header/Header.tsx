@@ -16,11 +16,19 @@ export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSear
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [logoutFeedback, setLogoutFeedback] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setSearchQuery(externalSearchQuery)
   }, [externalSearchQuery])
+
+  useEffect(() => {
+    if (isMobileSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isMobileSearchOpen])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,6 +89,7 @@ export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSear
       <div className={styles.searchWrapper}>
         <Search size={16} className={styles.searchIcon} aria-hidden="true" />
         <input
+          ref={searchInputRef}
           type="text"
           placeholder="Search posts..."
           className={styles.searchInput}
@@ -96,6 +105,16 @@ export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSear
       </div>
 
       <div className={styles.actions} aria-label="User actions">
+        <button
+          type="button"
+          className={styles.mobileSearchBtn}
+          aria-label="Toggle search"
+          onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+          data-testid="mobile-search-toggle"
+        >
+          <Search size={18} aria-hidden="true" />
+        </button>
+
         <button
           type="button"
           className={styles.actionBtn}
@@ -167,6 +186,30 @@ export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSear
           )}
         </div>
       </div>
+
+      {isMobileSearchOpen && (
+        <div className={styles.mobileSearchDropdown}>
+          <div className={styles.mobileSearchWrapper}>
+            <Search size={16} className={styles.searchIcon} aria-hidden="true" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search posts..."
+              className={styles.searchInput}
+              aria-label="Search posts"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearchSubmit()
+                  setIsMobileSearchOpen(false)
+                }
+              }}
+              autoFocus
+            />
+          </div>
+        </div>
+      )}
     </header >
   )
 }

@@ -292,6 +292,12 @@
   display: none !important;
 }
 
+@media (max-width: 770px) {
+  .viewToggle {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .wrap {
     padding: 10px 8px;
