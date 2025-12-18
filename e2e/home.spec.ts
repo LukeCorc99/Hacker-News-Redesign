@@ -121,7 +121,7 @@ test.describe('Post Management', () => {
     await expect(editedPost).toContainText('by testuser')
   })
 
-    test('user can delete their post successfully', async ({ page }) => {
+  test('user can delete their post successfully', async ({ page }) => {
     await loginUser(page)
 
     const submitBtn = page.getByTestId('submit')
@@ -416,7 +416,7 @@ test.describe('Post Feed', () => {
       await page.waitForTimeout(2000)
 
       const nextBtn = page.locator('button').filter({ hasText: /^Next/ })
-      
+
       if (await nextBtn.count() > 0 && await nextBtn.isEnabled()) {
         const firstPagePost = page.getByTestId('post-card').first()
         const firstPageText = await firstPagePost.textContent()
@@ -440,5 +440,67 @@ test.describe('Post Feed', () => {
 
       expect(page.url()).toMatch(/\/$/)
     })
+  })
+
+  test.describe('Responsive Design', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/')
+      await page.waitForLoadState('domcontentloaded')
+      await page.waitForTimeout(2000)
+    })
+
+    test('should transform search bar to button at 630px and allow searching', async ({ page }) => {
+      await page.setViewportSize({ width: 630, height: 720 })
+      await page.waitForTimeout(1000)
+
+      const mobileSearchBtn = page.getByTestId('mobile-search-toggle')
+      await expect(mobileSearchBtn).toBeVisible()
+
+      await mobileSearchBtn.click()
+      const mobileSearchInput = page.locator('input[placeholder="Search posts..."]').last()
+      await expect(mobileSearchInput).toBeVisible()
+
+      await mobileSearchInput.fill('React')
+      await mobileSearchInput.press('Enter')
+      await page.waitForTimeout(2000)
+
+      const posts = page.locator('[data-testid="post-card"]')
+      await expect(posts.first()).toBeVisible()
+    })
+
+    test('should hide Submit Post text at 630px breakpoint', async ({ page }) => {
+      await page.setViewportSize({ width: 630, height: 720 })
+      await page.waitForTimeout(1000)
+
+      const submitBtn = page.getByTestId('submit')
+      await expect(submitBtn).toBeVisible()
+
+      const submitText = page.locator('[data-testid="submit"] span')
+      const isHidden = await submitText.evaluate((el) => {
+        const style = window.getComputedStyle(el)
+        return style.display === 'none'
+      })
+      expect(isHidden).toBe(true)
+    })
+  })
+
+  test('should maintain UI functionality when resizing from desktop to mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 720 })
+    await page.waitForTimeout(2000)
+    await page.getByTestId('post-card').first().waitFor({ timeout: 15000 })
+
+    let posts = page.locator('[data-testid="post-card"]')
+    const postCountDesktop = await posts.count()
+    expect(postCountDesktop).toBeGreaterThan(0)
+
+    await page.setViewportSize({ width: 375, height: 667 })
+    await page.waitForTimeout(1000)
+
+    posts = page.locator('[data-testid="post-card"]')
+    const postCountMobile = await posts.count()
+    expect(postCountMobile).toBeGreaterThan(0)
+
+    const feedButton = page.locator('button[aria-label="Choose feed"]')
+    await expect(feedButton).toBeVisible()
   })
 })
