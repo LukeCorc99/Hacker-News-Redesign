@@ -56,7 +56,6 @@ export default function Header({ onLogin, onSubmit, isLoggedIn, onLogout, onSear
     } else {
       window.location.href = '/'
     }
-    setSearchQuery('')
   }
 
   return (

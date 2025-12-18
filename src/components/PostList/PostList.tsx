@@ -56,31 +56,27 @@ export default function PostList({
 }: PostListProps) {
   const [page, setPage] = useState(1)
   const [searchPage, setSearchPage] = useState(1)
-  const [stories, setStories] = useState<HackerNewsStory[]>([])
   const [searchResults, setSearchResults] = useState<HackerNewsStory[]>([])
   const [searchFetchedPages, setSearchFetchedPages] = useState<number>(0)
+  const [refresh, setRefresh] = useState(0)
   const sectionRef = useRef<HTMLElement>(null)
   const FeedIcon = feedIconMap[feedType]
 
+  const isSearchActive = searchQuery.trim() !== ''
+  const pageToFetch = isSearchActive ? searchFetchedPages + 1 : page
+
   const { stories: apiStories, isLoading, error, totalPages } = useHackerNews({ 
     feedType, 
-    page: searchQuery ? searchFetchedPages + 1 : page 
+    page: pageToFetch
   })
 
   useEffect(() => {
-    if (!searchQuery) {
-      setStories(apiStories)
+    if (searchQuery.trim()) {
+      setSearchPage(1)
+      setSearchResults([])
+      setSearchFetchedPages(0)
     }
-  }, [apiStories, searchQuery])
-
-  useEffect(() => {
-    setSearchPage(1)
-    setSearchResults([])
-    setSearchFetchedPages(0)
-    if (!searchQuery.trim()) {
-      setPage(1)
-    }
-  }, [searchQuery, feedType])
+  }, [searchQuery])
 
   useEffect(() => {
     if (searchQuery.trim() && apiStories.length > 0 && searchFetchedPages < totalPages && searchResults.length < 300) {
@@ -94,11 +90,13 @@ export default function PostList({
     }
   }, [apiStories, searchQuery, totalPages, searchFetchedPages, searchResults])
 
-  const displayStories = searchQuery.trim() === '' ? stories : searchResults
-  const currentPage = searchQuery.trim() === '' ? page : searchPage
-  const currentTotalPages = searchQuery.trim() === '' ? totalPages : Math.ceil(searchResults.length / 30)
+  const displayStories = isSearchActive ? searchResults : apiStories
+  const currentPage = isSearchActive ? searchPage : page
+  const currentTotalPages = isSearchActive ? Math.ceil(searchResults.length / 30) : totalPages
 
-  const paginatedStories = displayStories.slice((currentPage - 1) * 30, currentPage * 30)
+  const paginatedStories = isSearchActive 
+    ? displayStories.slice((currentPage - 1) * 30, currentPage * 30)
+    : displayStories
 
   useEffect(() => {
     if (sectionRef.current) {
@@ -118,7 +116,7 @@ export default function PostList({
         const newPosts = JSON.parse(localStorage.getItem('newPosts') || '[]') as HackerNewsStory[]
         const filtered = newPosts.filter((p: HackerNewsStory) => p && p.id !== postId)
         localStorage.setItem('newPosts', JSON.stringify(filtered))
-        setStories(prev => prev.filter(s => s.id !== postId))
+        setRefresh(prev => prev + 1)
       } catch (error) {
         console.error('Error deleting post:', error)
       }
@@ -127,6 +125,7 @@ export default function PostList({
 
   const userPostIds = new Set(
     (() => {
+      void refresh
       try {
         const posts = JSON.parse(localStorage.getItem('newPosts') || '[]') as HackerNewsStory[]
         return posts.filter((p: HackerNewsStory) => p && p.id).map((p: HackerNewsStory) => p.id)
@@ -287,6 +286,7 @@ export default function PostList({
           <p>No results found for "{searchQuery}"</p>
         </div>
       )}
-    </section>
+      </section>
+      
   )
 }

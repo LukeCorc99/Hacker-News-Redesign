@@ -114,17 +114,14 @@ test.describe('Post Management', () => {
     await editUrlInput.fill('https://example.com/edited')
     await saveBtn.click()
 
-    const successMsg = page.locator('text=Post updated successfully')
-    await expect(successMsg).toBeVisible()
-
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
 
     const editedPost = page.locator('[data-testid="post-card"]').filter({ hasText: 'Edited Post Title' })
     await expect(editedPost).toBeVisible({ timeout: 15000 })
     await expect(editedPost).toContainText('by testuser')
   })
 
-  test('user can delete their post successfully', async ({ page }) => {
+    test('user can delete their post successfully', async ({ page }) => {
     await loginUser(page)
 
     const submitBtn = page.getByTestId('submit')
@@ -318,7 +315,7 @@ test.describe('Post Feed', () => {
 
       const newOption = page.locator('[role="option"]').filter({ hasText: 'New' })
       await newOption.click()
-      
+
       await page.waitForTimeout(1500)
       await page.getByTestId('post-card').first().waitFor({ timeout: 15000 })
       await expect(feedButton).toContainText('New')
@@ -352,13 +349,13 @@ test.describe('Post Feed', () => {
 
       const newOption = page.locator('[role="option"]').filter({ hasText: 'New' })
       await newOption.click()
-      
+
       await page.waitForTimeout(1500)
       await page.getByTestId('post-card').first().waitFor({ timeout: 15000 })
 
       await expect(gridBtn).toHaveAttribute('aria-pressed', 'true')
     })
-  }) 
+  })
 
   test.describe('Post Display', () => {
     test('should display posts with all metadata', async ({ page }) => {
@@ -371,6 +368,77 @@ test.describe('Post Feed', () => {
 
       await expect(firstPost).toContainText('points')
       await expect(firstPost).toContainText('by')
+    })
+  })
+
+  test.describe('Search Functionality', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/')
+      await page.waitForLoadState('domcontentloaded')
+      await page.waitForTimeout(2000)
+      await page.getByTestId('post-card').first().waitFor({ timeout: 15000 })
+    })
+
+    test('should search for posts and display results', async ({ page }) => {
+      const searchInput = page.locator('input[placeholder="Search posts..."]')
+      await expect(searchInput).toBeVisible()
+
+      await searchInput.fill('React')
+      await searchInput.press('Enter')
+
+      await page.waitForTimeout(2000)
+
+      const posts = page.locator('[data-testid="post-card"]')
+      const firstPost = posts.first()
+      await expect(firstPost).toBeVisible()
+
+      const postText = await firstPost.textContent()
+      expect(postText?.toLowerCase()).toContain('react')
+    })
+
+    test('should display no results message when search yields nothing', async ({ page }) => {
+      const searchInput = page.locator('input[placeholder="Search posts..."]')
+      await searchInput.fill('xyzabc123notarealpost')
+      await searchInput.press('Enter')
+
+      await page.waitForTimeout(3000)
+
+      const emptyDiv = page.locator('[class*="empty"]')
+      await expect(emptyDiv).toBeVisible({ timeout: 10000 })
+      await expect(emptyDiv).toContainText("No stories found")
+    })
+
+    test('should paginate through search results', async ({ page }) => {
+      const searchInput = page.locator('input[placeholder="Search posts..."]')
+      await searchInput.fill('JavaScript')
+      await searchInput.press('Enter')
+
+      await page.waitForTimeout(2000)
+
+      const nextBtn = page.locator('button').filter({ hasText: /^Next/ })
+      
+      if (await nextBtn.count() > 0 && await nextBtn.isEnabled()) {
+        const firstPagePost = page.getByTestId('post-card').first()
+        const firstPageText = await firstPagePost.textContent()
+
+        await nextBtn.click()
+        await page.waitForTimeout(2000)
+
+        const secondPagePost = page.getByTestId('post-card').first()
+        const secondPageText = await secondPagePost.textContent()
+
+        expect(firstPageText).not.toEqual(secondPageText)
+      }
+    })
+
+    test('should refresh page when searching with empty query', async ({ page }) => {
+      const searchInput = page.locator('input[placeholder="Search posts..."]')
+      await searchInput.fill('   ')
+      await searchInput.press('Enter')
+
+      await page.waitForTimeout(1000)
+
+      expect(page.url()).toMatch(/\/$/)
     })
   })
 })

@@ -81,6 +81,11 @@ function HomeContent() {
     const handleSearch = () => {
     }
 
+    const handleChangeFeedType = (newFeedType: FeedType) => {
+        setFeedType(newFeedType)
+        setSearchQuery('')
+    }
+
     const handleLogin = (action: 'login' | 'register') => {
         setAuthAction(action)
         setShouldOpenSubmitAfterLogin(false)
@@ -146,7 +151,7 @@ function HomeContent() {
             <PostList
                 feedType={feedType}
                 viewMode={viewMode}
-                onChangeFeedType={setFeedType}
+                onChangeFeedType={handleChangeFeedType}
                 onChangeViewMode={setViewMode}
                 onEditPost={handleEditPost}
                 searchQuery={searchQuery}
