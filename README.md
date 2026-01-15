@@ -52,7 +52,7 @@ Essential unit testing using Vitest and comprehensive end-to-end testing using P
 
 # Architecture
 
-The application follows a layered SPA architecture with clear separation of concerns: UI components handle rendering, Context API manages UI state, TanStack Query handles server state caching and pagination. Custom hooks combine Query with business logic, while a dedicated service layer abstracts API calls. TypeScript types are centralized for consistency across all layers.
+The application follows a layered SPA architecture with clear separation of concerns: UI components handle rendering, TanStack Query handles server state caching and pagination. Custom hooks combine Query with business logic, while a dedicated service layer abstracts API calls. TypeScript types are centralized for consistency across all layers.
 
 ## Installation
 
