@@ -10,8 +10,7 @@ import { useState, useRef, useEffect } from "react";
 import type { HeaderProps } from "../../types";
 import styles from "./Header.module.css";
 
-
-const SEARCH_PLACEHOLDER = "Search posts...";
+const BASE_PATH = "/HackerNewsAssignment/";
 
 export default function Header({
   onLogin,
@@ -27,7 +26,6 @@ export default function Header({
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
 
   useEffect(() => {
     setSearchQuery(externalSearchQuery);
@@ -48,10 +46,10 @@ export default function Header({
         setIsDropdownOpen(false);
       }
     };
+
     document.addEventListener("mousedown", clickOutside);
     return () => document.removeEventListener("mousedown", clickOutside);
   }, []);
-
 
   const dropdownAction = (action: "login" | "register") => {
     onLogin(action);
@@ -70,42 +68,9 @@ export default function Header({
     if (searchQuery.trim()) {
       onSearchSubmit?.(searchQuery);
     } else {
-      window.location.href = "/";
+      window.location.href = BASE_PATH;
     }
   };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      searchSubmit();
-    }
-  };
-
-  const handleMobileSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      searchSubmit();
-      setIsMobileSearchOpen(false);
-    }
-  };
-
-  const SearchInput = ({
-    onKeyDown,
-  }: {
-    onKeyDown: (e: React.KeyboardEvent) => void;
-  }) => (
-    <div className={styles.searchWrapper}>
-      <Search size={16} className={styles.searchIcon} aria-hidden="true" />
-      <input
-        ref={searchInputRef}
-        type="text"
-        placeholder={SEARCH_PLACEHOLDER}
-        className={styles.searchInput}
-        aria-label="Search posts"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
-    </div>
-  );
 
   return (
     <header className={styles.header}>
@@ -115,7 +80,7 @@ export default function Header({
           className={styles.brand}
           onClick={() => {
             sessionStorage.setItem("selectedFeedType", "top");
-            window.location.href = "/";
+            window.location.href = BASE_PATH;
           }}
           aria-label="Go to homepage"
           title="Go to homepage"
@@ -127,7 +92,23 @@ export default function Header({
         </button>
       </div>
 
-      <SearchInput onKeyDown={handleSearchKeyDown} />
+      <div className={styles.searchWrapper}>
+        <Search size={16} className={styles.searchIcon} aria-hidden="true" />
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Search posts..."
+          className={styles.searchInput}
+          aria-label="Search posts"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              searchSubmit();
+            }
+          }}
+        />
+      </div>
 
       <div className={styles.actions} aria-label="User actions">
         <button
@@ -176,14 +157,16 @@ export default function Header({
               {isLoggedIn ? (
                 <button
                   type="button"
-                  className={`${styles.dropdownItem} ${
-                    logoutFeedback ? styles.loggingOut : ""
-                  }`}
+                  className={styles.dropdownItem}
                   onClick={logOut}
                   data-testid="dropdown-logout"
                   role="menuitem"
+                  style={{
+                    opacity: logoutFeedback ? 0.5 : 1,
+                    transition: "opacity 300ms ease",
+                  }}
                 >
-                  <LogIn size={16} className={styles.logoutIcon} />
+                  <LogIn size={16} style={{ transform: "scaleX(-1)" }} />
                   {logoutFeedback ? "Logging out..." : "Log out"}
                 </button>
               ) : (
@@ -217,7 +200,29 @@ export default function Header({
 
       {isMobileSearchOpen && (
         <div className={styles.mobileSearchDropdown}>
-          <SearchInput onKeyDown={handleMobileSearchKeyDown} />
+          <div className={styles.mobileSearchWrapper}>
+            <Search
+              size={16}
+              className={styles.searchIcon}
+              aria-hidden="true"
+            />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search posts..."
+              className={styles.searchInput}
+              aria-label="Search posts"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  searchSubmit();
+                  setIsMobileSearchOpen(false);
+                }
+              }}
+              autoFocus
+            />
+          </div>
         </div>
       )}
     </header>

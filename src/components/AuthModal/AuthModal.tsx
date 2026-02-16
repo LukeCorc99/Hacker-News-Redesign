@@ -3,14 +3,13 @@ import { X, LogIn, UserPlus } from "lucide-react";
 import styles from "./AuthModal.module.css";
 import type { AuthModalProps } from "../../types";
 
-
 const MIN_PASSWORD_LENGTH = 6;
 
 const validateForm = (
   username: string,
   password: string,
   confirmPassword: string,
-  action: "login" | "register"
+  action: "login" | "register",
 ): string => {
   if (!username.trim()) return "Username is required";
   if (!password) return "Password is required";
@@ -20,7 +19,6 @@ const validateForm = (
     return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
   return "";
 };
-
 
 export default function AuthModal({
   action,
@@ -49,7 +47,7 @@ export default function AuthModal({
       username,
       password,
       confirmPassword,
-      action
+      action,
     );
     if (validationError) {
       setError(validationError);

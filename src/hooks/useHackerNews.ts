@@ -59,6 +59,8 @@ export function useHackerNews({ feedType, page }: UseHackerNewsOptions) {
     page * STORIES_PER_PAGE,
   );
 
+    console.log("page", page);
+
   return {
     stories: paginatedStories,
     isLoading: isLoadingIds || isLoadingStories,

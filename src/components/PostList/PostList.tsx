@@ -57,6 +57,7 @@ export default function PostList({
     totalPages,
   } = useHackerNews({ feedType, page: pageToFetch });
 
+
   const displayStories = isSearchActive ? searchResults : apiStories;
   const currentPage = isSearchActive ? searchCurrentPage : page;
   const currentTotalPages = isSearchActive
@@ -64,9 +65,9 @@ export default function PostList({
     : totalPages;
   const paginatedStories = isSearchActive
     ? displayStories.slice(
-      (currentPage - 1) * STORIES_PER_PAGE,
-      currentPage * STORIES_PER_PAGE,
-    )
+        (currentPage - 1) * STORIES_PER_PAGE,
+        currentPage * STORIES_PER_PAGE,
+      )
     : displayStories;
 
   const userPostIds = new Set(
@@ -248,6 +249,7 @@ export default function PostList({
               setCurrentPage(1);
             }}
             className={styles.retryBtn}
+            aria-label="Retry loading stories"
           >
             Retry
           </button>
@@ -272,12 +274,13 @@ export default function PostList({
             ))}
           </div>
 
-          {currentTotalPages > 1 && (
+          {(
             <div className={styles.pagination}>
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className={styles.paginationBtn}
+                aria-label={`Go to previous page (currently on page ${currentPage})`}
               >
                 <ChevronLeft size={18} />
                 Previous
@@ -293,6 +296,7 @@ export default function PostList({
                 }
                 disabled={currentPage >= currentTotalPages}
                 className={styles.paginationBtn}
+                aria-label={`Go to next page (currently on page ${currentPage})`}
               >
                 Next
                 <ChevronRight size={18} />

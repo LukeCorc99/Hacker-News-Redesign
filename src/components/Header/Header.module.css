@@ -75,7 +75,9 @@
   font-family: inherit;
   font-size: 0.8rem;
   color: rgba(0, 0, 0, 0.8);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .searchInput::placeholder {
@@ -110,7 +112,9 @@
   cursor: pointer;
   color: rgba(0, 0, 0, 0.8);
   font-family: inherit;
-  transition: background-color 120ms ease, transform 120ms ease,
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease,
     color 120ms ease;
 }
 
@@ -196,7 +200,9 @@
   font-size: 0.85rem;
   font-weight: 500;
   font-family: inherit;
-  transition: background-color 100ms ease, color 100ms ease;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .dropdownItem:hover {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { QueryProvider } from "./providers";
 import { Header, PostList, AuthModal, SubmitPostModal } from "./components";
-import { useHackerNews } from "./hooks";
 import type { FeedType, ViewMode, HackerNewsStory, AuthAction } from "./types";
 
 const useLocalStorage = <T,>(key: string, defaultValue: T) => {
@@ -63,7 +62,6 @@ function AppContent() {
   });
   const [shouldOpenSubmitAfterLogin, setOpenSubmitAfterLogin] = useState(false);
 
-  useHackerNews({ feedType, page: 1 });
   usePersist("selectedViewMode", viewMode, "local");
   usePersist("selectedFeedType", feedType, "session");
   usePersist("isLoggedIn", isLoggedIn.toString(), "local");

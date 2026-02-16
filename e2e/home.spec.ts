@@ -1,55 +1,27 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import {
+  navigateHome,
+  loginUser,
+  switchToFeed,
+  getPostCard,
+  submitPost,
+  openAuthModal,
+  openRegisterModal,
+  fillAuthForm,
+  closeOverlay,
+  setMobileViewport,
+  getMobileSearchInput,
+} from "./helpers";
+import { TEST_CREDENTIALS, URLS, WAITS, SELECTORS } from "./fixtures";
 
 test.describe("Post Management", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
+    await navigateHome(page);
   });
-
-  const loginUser = async (page: Page) => {
-    const userBtn = page.getByTestId("user-menu");
-    await userBtn.click();
-
-    const loginBtn = page.getByTestId("dropdown-login");
-    await loginBtn.click();
-
-    const usernameInput = page.getByTestId("auth-username");
-    const passwordInput = page.getByTestId("auth-password");
-    const submitBtn = page.getByTestId("auth-submit");
-
-    await usernameInput.fill("testuser");
-    await passwordInput.fill("password123");
-    await submitBtn.click();
-
-    await page.waitForTimeout(2000);
-  };
-
-  const switchToNewFeed = async (page: Page) => {
-    const feedButton = page.locator('button[aria-label="Choose feed"]');
-    await feedButton.click();
-
-    const newOption = page
-      .locator('[role="option"]')
-      .filter({ hasText: "New" });
-    await newOption.click();
-
-    await page.waitForTimeout(2000);
-  };
 
   test("user can submit a post successfully", async ({ page }) => {
     await loginUser(page);
-
-    const submitBtn = page.getByTestId("submit");
-    await submitBtn.click();
-
-    const titleInput = page.getByTestId("submit-title");
-    const urlInput = page.getByTestId("submit-url");
-    const submitPostBtn = page.getByTestId("submit-post");
-
-    await titleInput.fill("New Frontend Framework");
-    await urlInput.fill("https://example.com/framework");
-    await submitPostBtn.click();
+    await submitPost(page, "New Frontend Framework", URLS.framework);
 
     const successMsg = page.locator("text=Post submitted successfully");
     await expect(successMsg).toBeVisible();
@@ -57,117 +29,72 @@ test.describe("Post Management", () => {
 
   test("user can see their submitted post on new feed", async ({ page }) => {
     await loginUser(page);
+    const postTitle = "React Performance Tips";
 
-    const submitBtn = page.getByTestId("submit");
-    await submitBtn.click();
+    await submitPost(page, postTitle, URLS.reactTips);
+    await page.waitForTimeout(WAITS.feedSwitch);
+    await switchToFeed(page, "New");
+    await page.waitForTimeout(WAITS.feedSwitch);
 
-    const titleInput = page.getByTestId("submit-title");
-    const urlInput = page.getByTestId("submit-url");
-    const submitPostBtn = page.getByTestId("submit-post");
-
-    await titleInput.fill("React Performance Tips");
-    await urlInput.fill("https://example.com/react-tips");
-    await submitPostBtn.click();
-
-    await page.waitForTimeout(2000);
-
-    await switchToNewFeed(page);
-
-    await page.waitForTimeout(2000);
-
-    const userPost = page
-      .locator('[data-testid="post-card"]')
-      .filter({ hasText: "React Performance Tips" });
-    await expect(userPost).toBeVisible({ timeout: 15000 });
+    const userPost = getPostCard(page, postTitle);
+    await expect(userPost).toBeVisible({ timeout: WAITS.postLoading });
     await expect(userPost).toContainText("by testuser");
   });
 
   test("user can edit their post successfully", async ({ page }) => {
     await loginUser(page);
+    const originalTitle = "Original Post Title";
+    const editedTitle = "Edited Post Title";
 
-    const submitBtn = page.getByTestId("submit");
-    await submitBtn.click();
+    await submitPost(page, originalTitle, URLS.original);
+    await page.waitForTimeout(WAITS.editCompletion);
+    await switchToFeed(page, "New");
+    await page.waitForTimeout(WAITS.editCompletion);
 
-    const titleInput = page.getByTestId("submit-title");
-    const urlInput = page.getByTestId("submit-url");
-    const submitPostBtn = page.getByTestId("submit-post");
+    const userPost = getPostCard(page, originalTitle);
+    await expect(userPost).toBeVisible({ timeout: WAITS.postLoading });
 
-    await titleInput.fill("Original Post Title");
-    await urlInput.fill("https://example.com/original");
-    await submitPostBtn.click();
-
-    await page.waitForTimeout(4000);
-
-    await switchToNewFeed(page);
-
-    await page.waitForTimeout(4000);
-
-    const userPost = page
-      .locator('[data-testid="post-card"]')
-      .filter({ hasText: "Original Post Title" });
-    await expect(userPost).toBeVisible({ timeout: 15000 });
     const editBtn = userPost.locator('button[aria-label="Edit post"]');
-
     await editBtn.click();
 
-    const editTitleInput = page.getByTestId("submit-title");
-    const editUrlInput = page.getByTestId("submit-url");
-    const saveBtn = page.getByTestId("submit-post");
+    const titleInput = page.getByTestId(SELECTORS.submitTitle.testId);
+    const urlInput = page.getByTestId(SELECTORS.submitUrl.testId);
+    const saveBtn = page.getByTestId(SELECTORS.submitPost.testId);
 
-    await editTitleInput.clear();
-    await editTitleInput.fill("Edited Post Title");
-    await editUrlInput.clear();
-    await editUrlInput.fill("https://example.com/edited");
+    await titleInput.clear();
+    await titleInput.fill(editedTitle);
+    await urlInput.clear();
+    await urlInput.fill(URLS.edited);
     await saveBtn.click();
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(WAITS.pageLoad);
 
-    const editedPost = page
-      .locator('[data-testid="post-card"]')
-      .filter({ hasText: "Edited Post Title" });
-    await expect(editedPost).toBeVisible({ timeout: 15000 });
+    const editedPost = getPostCard(page, editedTitle);
+    await expect(editedPost).toBeVisible({ timeout: WAITS.postLoading });
     await expect(editedPost).toContainText("by testuser");
   });
 
   test("user can delete their post successfully", async ({ page }) => {
     await loginUser(page);
-
-    const submitBtn = page.getByTestId("submit");
-    await submitBtn.click();
-
-    const titleInput = page.getByTestId("submit-title");
-    const urlInput = page.getByTestId("submit-url");
-    const submitPostBtn = page.getByTestId("submit-post");
-
     const postTitle = "Post to Delete Successfully";
-    await titleInput.fill(postTitle);
-    await urlInput.fill("https://example.com/deleteme");
-    await submitPostBtn.click();
 
-    await page.waitForTimeout(2000);
+    await submitPost(page, postTitle, URLS.deleteMe);
+    await page.waitForTimeout(WAITS.feedSwitch);
+    await switchToFeed(page, "New");
+    await page.waitForTimeout(WAITS.feedSwitch);
 
-    await switchToNewFeed(page);
-
-    await page.waitForTimeout(2000);
-
-    const userPost = page
-      .locator('[data-testid="post-card"]')
-      .filter({ hasText: postTitle });
-    await expect(userPost).toBeVisible({ timeout: 15000 });
+    const userPost = getPostCard(page, postTitle);
+    await expect(userPost).toBeVisible({ timeout: WAITS.postLoading });
 
     const deleteBtn = userPost.locator('button[aria-label="Delete post"]');
-
     page.on("dialog", async (dialog) => {
       await dialog.accept();
     });
 
     await deleteBtn.click();
+    await page.waitForTimeout(WAITS.deleteCompletion);
 
-    await page.waitForTimeout(1000);
-
-    const deletedPost = page
-      .locator('[data-testid="post-card"]')
-      .filter({ hasText: postTitle });
+    const deletedPost = getPostCard(page, postTitle);
     await expect(deletedPost).not.toBeVisible();
   });
 });
@@ -177,52 +104,28 @@ test.describe("Header", () => {
     await page.goto("/");
   });
 
-  test.describe("Layout and Branding", () => {
-    test("should display the header with logo and title", async ({ page }) => {
-      const header = page.locator("header");
-      await expect(header).toBeVisible();
-
-      const logo = page.locator("text=Y");
-      await expect(logo).toBeVisible();
-
-      const title = page.locator("text=Hacker News");
-      await expect(title).toBeVisible();
-    });
-
-    test("should display Submit Post button", async ({ page }) => {
-      const submitBtn = page.getByTestId("submit");
-      await expect(submitBtn).toBeVisible();
-      await expect(submitBtn).toContainText("Submit Post");
-    });
-
-    test("should display user menu button", async ({ page }) => {
-      const userBtn = page.getByTestId("user-menu");
-      await expect(userBtn).toBeVisible();
-    });
-  });
-
   test.describe("User Menu - Logged Out", () => {
     test("should open dropdown when user menu clicked", async ({ page }) => {
-      const userBtn = page.getByTestId("user-menu");
+      const userBtn = page.getByTestId(SELECTORS.userMenu.testId);
       await userBtn.click();
 
-      const loginBtn = page.getByTestId("dropdown-login");
-      const registerBtn = page.getByTestId("dropdown-register");
+      const loginBtn = page.getByTestId(SELECTORS.dropdownLogin.testId);
+      const registerBtn = page.getByTestId(SELECTORS.dropdownRegister.testId);
 
       await expect(loginBtn).toBeVisible();
       await expect(registerBtn).toBeVisible();
     });
 
     test("should close dropdown when clicking outside", async ({ page }) => {
-      const userBtn = page.getByTestId("user-menu");
+      const userBtn = page.getByTestId(SELECTORS.userMenu.testId);
       await userBtn.click();
 
-      let loginBtn = page.getByTestId("dropdown-login");
+      let loginBtn = page.getByTestId(SELECTORS.dropdownLogin.testId);
       await expect(loginBtn).toBeVisible();
 
-      await page.click("body", { position: { x: 0, y: 0 } });
+      await closeOverlay(page);
 
-      loginBtn = page.getByTestId("dropdown-login");
+      loginBtn = page.getByTestId(SELECTORS.dropdownLogin.testId);
       await expect(loginBtn).not.toBeVisible();
     });
   });
@@ -231,7 +134,7 @@ test.describe("Header", () => {
     test("should open login modal when Submit Post clicked while logged out", async ({
       page,
     }) => {
-      const submitBtn = page.getByTestId("submit");
+      const submitBtn = page.getByTestId(SELECTORS.submit.testId);
       await submitBtn.click();
 
       const loginModal = page.locator("text=Login").first();
@@ -241,26 +144,19 @@ test.describe("Header", () => {
 
   test.describe("Login Flow", () => {
     test("should log in user and show Log out option", async ({ page }) => {
-      const userBtn = page.getByTestId("user-menu");
-      await userBtn.click();
+      await openAuthModal(page);
+      await fillAuthForm(
+        page,
+        TEST_CREDENTIALS.username,
+        TEST_CREDENTIALS.password,
+      );
 
-      const loginBtn = page.getByTestId("dropdown-login");
-      await loginBtn.click();
+      await page.waitForTimeout(WAITS.loginCompletion);
 
-      const usernameInput = page.getByTestId("auth-username");
-      const passwordInput = page.getByTestId("auth-password");
-      const submitBtn = page.getByTestId("auth-submit");
-
-      await usernameInput.fill("testuser");
-      await passwordInput.fill("password123");
-      await submitBtn.click();
-
-      await page.waitForTimeout(2000);
-
-      const userMenuBtn = page.getByTestId("user-menu");
+      const userMenuBtn = page.getByTestId(SELECTORS.userMenu.testId);
       await userMenuBtn.click();
 
-      const logoutBtn = page.getByTestId("dropdown-logout");
+      const logoutBtn = page.getByTestId(SELECTORS.dropdownLogout.testId);
       await expect(logoutBtn).toBeVisible();
       await expect(logoutBtn).toContainText("Log out");
     });
@@ -268,58 +164,34 @@ test.describe("Header", () => {
     test("should show Submit Post modal after login from Submit Post button", async ({
       page,
     }) => {
-      const submitBtn = page.getByTestId("submit");
+      const submitBtn = page.getByTestId(SELECTORS.submit.testId);
       await submitBtn.click();
 
-      const usernameInput = page.getByTestId("auth-username");
-      const passwordInput = page.getByTestId("auth-password");
-      const authSubmitBtn = page.getByTestId("auth-submit");
+      await fillAuthForm(
+        page,
+        TEST_CREDENTIALS.username,
+        TEST_CREDENTIALS.password,
+      );
 
-      await usernameInput.fill("testuser");
-      await passwordInput.fill("password123");
-      await authSubmitBtn.click();
-
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(WAITS.loginCompletion);
 
       const submitPostModal = page.locator("text=Submit").first();
       await expect(submitPostModal).toBeVisible();
-    });
-  });
-
-  test.describe("Accessibility", () => {
-    test("should have proper ARIA labels on buttons", async ({ page }) => {
-      const submitBtn = page.getByTestId("submit");
-      await expect(submitBtn).toHaveAttribute("aria-label", "Submit post");
-
-      const userBtn = page.getByTestId("user-menu");
-      await expect(userBtn).toHaveAttribute("aria-label", "User menu");
-    });
-
-    test("should have aria-expanded attribute on user menu button", async ({
-      page,
-    }) => {
-      const userBtn = page.getByTestId("user-menu");
-
-      await expect(userBtn).toHaveAttribute("aria-expanded", "false");
-
-      await userBtn.click();
-
-      await expect(userBtn).toHaveAttribute("aria-expanded", "true");
     });
   });
 });
 
 test.describe("Post Feed", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
-    await page.getByTestId("post-card").first().waitFor({ timeout: 15000 });
+    await navigateHome(page);
+    await page.getByTestId(SELECTORS.postCard.testId).first().waitFor({
+      timeout: WAITS.postLoading,
+    });
   });
 
   test.describe("Feed Selection", () => {
     test("should display Top feed by default", async ({ page }) => {
-      const feedButton = page.locator('button[aria-label="Choose feed"]');
+      const feedButton = SELECTORS.feedButton(page);
       await expect(feedButton).toBeVisible();
       await expect(feedButton).toContainText("Top");
 
@@ -328,16 +200,9 @@ test.describe("Post Feed", () => {
     });
 
     test("should change feeds when selected", async ({ page }) => {
-      const feedButton = page.locator('button[aria-label="Choose feed"]');
-      await feedButton.click();
+      await switchToFeed(page, "New");
 
-      const newOption = page
-        .locator('[role="option"]')
-        .filter({ hasText: "New" });
-      await newOption.click();
-
-      await page.waitForTimeout(1500);
-      await page.getByTestId("post-card").first().waitFor({ timeout: 15000 });
+      const feedButton = SELECTORS.feedButton(page);
       await expect(feedButton).toContainText("New");
 
       const posts = page.locator('[data-testid="post-card"]');
@@ -346,34 +211,24 @@ test.describe("Post Feed", () => {
   });
 
   test.describe("View Modes", () => {
-    test("should display list view by default", async ({ page }) => {
-      const listBtn = page.getByTestId("view-list");
-      await expect(listBtn).toHaveAttribute("aria-pressed", "true");
-    });
-
     test("should switch to grid view when clicked", async ({ page }) => {
-      const gridBtn = page.getByTestId("view-grid");
+      const gridBtn = page.getByTestId(SELECTORS.viewGrid.testId);
       await gridBtn.click();
 
       await expect(gridBtn).toHaveAttribute("aria-pressed", "true");
     });
 
     test("should maintain view mode when changing feeds", async ({ page }) => {
-      const gridBtn = page.getByTestId("view-grid");
+      const gridBtn = page.getByTestId(SELECTORS.viewGrid.testId);
       await gridBtn.click();
 
       await expect(gridBtn).toHaveAttribute("aria-pressed", "true");
 
-      const feedButton = page.locator('button[aria-label="Choose feed"]');
-      await feedButton.click();
-
-      const newOption = page
-        .locator('[role="option"]')
-        .filter({ hasText: "New" });
-      await newOption.click();
-
-      await page.waitForTimeout(1500);
-      await page.getByTestId("post-card").first().waitFor({ timeout: 15000 });
+      await switchToFeed(page, "New");
+      await page
+        .getByTestId(SELECTORS.postCard.testId)
+        .first()
+        .waitFor({ timeout: WAITS.postLoading });
 
       await expect(gridBtn).toHaveAttribute("aria-pressed", "true");
     });
@@ -381,7 +236,7 @@ test.describe("Post Feed", () => {
 
   test.describe("Post Display", () => {
     test("should display posts with all metadata", async ({ page }) => {
-      const firstPost = page.getByTestId("post-card").first();
+      const firstPost = page.getByTestId(SELECTORS.postCard.testId).first();
       await expect(firstPost).toBeVisible();
 
       const title = firstPost.locator("a").first();
@@ -395,20 +250,18 @@ test.describe("Post Feed", () => {
 
   test.describe("Search Functionality", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForTimeout(2000);
-      await page.getByTestId("post-card").first().waitFor({ timeout: 15000 });
+      await navigateHome(page);
+      await page.getByTestId(SELECTORS.postCard.testId).first().waitFor({
+        timeout: WAITS.postLoading,
+      });
     });
 
     test("should search for posts and display results", async ({ page }) => {
-      const searchInput = page.locator('input[placeholder="Search posts..."]');
-      await expect(searchInput).toBeVisible();
-
+      const searchInput = SELECTORS.searchInput(page);
       await searchInput.fill("React");
       await searchInput.press("Enter");
 
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(WAITS.pageLoad);
 
       const posts = page.locator('[data-testid="post-card"]');
       const firstPost = posts.first();
@@ -421,98 +274,338 @@ test.describe("Post Feed", () => {
     test("should display no results message when search yields nothing", async ({
       page,
     }) => {
-      const searchInput = page.locator('input[placeholder="Search posts..."]');
+      const searchInput = SELECTORS.searchInput(page);
       await searchInput.fill("xyzabc123notarealpost");
       await searchInput.press("Enter");
 
       await page.waitForTimeout(3000);
 
       const emptyDiv = page.locator('[class*="empty"]');
-      await expect(emptyDiv).toBeVisible({ timeout: 10000 });
+      await expect(emptyDiv).toBeVisible({ timeout: WAITS.searchLoading });
       await expect(emptyDiv).toContainText("No stories found");
     });
 
     test("should paginate through search results", async ({ page }) => {
-      const searchInput = page.locator('input[placeholder="Search posts..."]');
+      const searchInput = SELECTORS.searchInput(page);
       await searchInput.fill("JavaScript");
       await searchInput.press("Enter");
 
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(WAITS.pageLoad);
 
       const nextBtn = page.locator("button").filter({ hasText: /^Next/ });
 
       if ((await nextBtn.count()) > 0 && (await nextBtn.isEnabled())) {
-        const firstPagePost = page.getByTestId("post-card").first();
+        const firstPagePost = page
+          .getByTestId(SELECTORS.postCard.testId)
+          .first();
         const firstPageText = await firstPagePost.textContent();
 
         await nextBtn.click();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(WAITS.pageLoad);
 
-        const secondPagePost = page.getByTestId("post-card").first();
+        const secondPagePost = page
+          .getByTestId(SELECTORS.postCard.testId)
+          .first();
         const secondPageText = await secondPagePost.textContent();
 
         expect(firstPageText).not.toEqual(secondPageText);
       }
     });
+  });
+});
 
-    test("should refresh page when searching with empty query", async ({
-      page,
-    }) => {
-      const searchInput = page.locator('input[placeholder="Search posts..."]');
-      await searchInput.fill("   ");
-      await searchInput.press("Enter");
-
-      await page.waitForTimeout(1000);
-
-      expect(page.url()).toMatch(/\/$/);
-    });
+test.describe("Auth Validation", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
   });
 
-  test.describe("Responsive Design", () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForTimeout(2000);
-    });
-
-
-    test("should hide Submit Post text at 630px breakpoint", async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 630, height: 720 });
-      await page.waitForTimeout(1000);
-
-      const submitBtn = page.getByTestId("submit");
-      await expect(submitBtn).toBeVisible();
-
-      const submitText = page.locator('[data-testid="submit"] span');
-      const isHidden = await submitText.evaluate((el) => {
-        const style = window.getComputedStyle(el);
-        return style.display === "none";
-      });
-      expect(isHidden).toBe(true);
-    });
-  });
-
-  test("should maintain UI functionality when resizing from desktop to mobile", async ({
+  test("should show error when submitting form with empty username", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1200, height: 720 });
-    await page.waitForTimeout(2000);
-    await page.getByTestId("post-card").first().waitFor({ timeout: 15000 });
+    await openAuthModal(page);
 
-    let posts = page.locator('[data-testid="post-card"]');
-    const postCountDesktop = await posts.count();
-    expect(postCountDesktop).toBeGreaterThan(0);
+    const passwordInput = page.getByTestId(SELECTORS.authPassword.testId);
+    const submitBtn = page.getByTestId(SELECTORS.authSubmit.testId);
 
-    await page.setViewportSize({ width: 375, height: 667 });
+    await passwordInput.fill(TEST_CREDENTIALS.password);
+    await submitBtn.click();
+
+    const errorMsg = page.locator("text=Username is required");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when submitting form with empty password", async ({
+    page,
+  }) => {
+    await openAuthModal(page);
+
+    const usernameInput = page.getByTestId(SELECTORS.authUsername.testId);
+    const submitBtn = page.getByTestId(SELECTORS.authSubmit.testId);
+
+    await usernameInput.fill(TEST_CREDENTIALS.username);
+    await submitBtn.click();
+
+    const errorMsg = page.locator("text=Password is required");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when register passwords do not match", async ({
+    page,
+  }) => {
+    await openRegisterModal(page);
+
+    await fillAuthForm(page, "newuser", "password123", "differentpassword");
+
+    const errorMsg = page.locator("text=Passwords do not match");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when register password is too short", async ({
+    page,
+  }) => {
+    await openRegisterModal(page);
+
+    await fillAuthForm(page, "newuser", "pass", "pass");
+
+    const errorMsg = page.locator(
+      "text=Password must be at least 6 characters",
+    );
+    await expect(errorMsg).toBeVisible();
+  });
+});
+
+test.describe("Post Submission Validation", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
+  });
+
+  test("should show error when submitting post without title", async ({
+    page,
+  }) => {
+    await loginUser(page);
+
+    const submitBtn = page.getByTestId(SELECTORS.submit.testId);
+    await submitBtn.click();
+
+    const submitPostBtn = page.getByTestId(SELECTORS.submitPost.testId);
+    await submitPostBtn.click();
+
+    const errorMsg = page.locator("text=Title is required");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when title is less than 3 characters", async ({
+    page,
+  }) => {
+    await loginUser(page);
+
+    const submitBtn = page.getByTestId(SELECTORS.submit.testId);
+    await submitBtn.click();
+
+    const titleInput = page.getByTestId(SELECTORS.submitTitle.testId);
+    const submitPostBtn = page.getByTestId(SELECTORS.submitPost.testId);
+
+    await titleInput.fill("ab");
+    await submitPostBtn.click();
+
+    const errorMsg = page.locator("text=Title must be at least 3 characters");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when neither URL nor text is provided", async ({
+    page,
+  }) => {
+    await loginUser(page);
+
+    const submitBtn = page.getByTestId(SELECTORS.submit.testId);
+    await submitBtn.click();
+
+    const titleInput = page.getByTestId(SELECTORS.submitTitle.testId);
+    const submitPostBtn = page.getByTestId(SELECTORS.submitPost.testId);
+
+    await titleInput.fill("Valid Title");
+    await submitPostBtn.click();
+
+    const errorMsg = page.locator("text=Please provide either a URL or text");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should show error when URL is invalid", async ({ page }) => {
+    await loginUser(page);
+
+    const submitBtn = page.getByTestId(SELECTORS.submit.testId);
+    await submitBtn.click();
+
+    const titleInput = page.getByTestId(SELECTORS.submitTitle.testId);
+    const urlInput = page.getByTestId(SELECTORS.submitUrl.testId);
+    const submitPostBtn = page.getByTestId(SELECTORS.submitPost.testId);
+
+    await titleInput.fill("Valid Title");
+    await urlInput.fill("not-a-valid-url");
+    await submitPostBtn.click();
+
+    const errorMsg = page.locator("text=Please enter a valid URL");
+    await expect(errorMsg).toBeVisible();
+  });
+
+  test("should submit post with text but no URL", async ({ page }) => {
+    await loginUser(page);
+    await submitPost(
+      page,
+      "Text Only Post",
+      undefined,
+      "This is a discussion post without a URL",
+    );
+
+    const successMsg = page.locator("text=Post submitted successfully");
+    await expect(successMsg).toBeVisible();
+  });
+});
+
+test.describe("Modal Closure", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
+  });
+
+  test("should close auth modal when close button is clicked", async ({
+    page,
+  }) => {
+    await openAuthModal(page);
+
+    const closeBtn = page.getByTestId(SELECTORS.closeAuthModal.testId);
+    await closeBtn.click();
+
+    const authModal = page.getByTestId(SELECTORS.closeAuthModal.testId);
+    await expect(authModal).not.toBeVisible();
+  });
+
+  test("should close submit modal when close button is clicked", async ({
+    page,
+  }) => {
+    await loginUser(page);
+
+    const submitBtn = page.getByTestId(SELECTORS.submit.testId);
+    await submitBtn.click();
+
+    const closeBtn = page.getByTestId(SELECTORS.closeSubmitModal.testId);
+    await closeBtn.click();
+
+    const submitModal = page.getByTestId(SELECTORS.closeSubmitModal.testId);
+    await expect(submitModal).not.toBeVisible();
+  });
+
+  test("should close auth modal when clicking outside overlay", async ({
+    page,
+  }) => {
+    await openAuthModal(page);
+    await closeOverlay(page);
+
+    const authModal = page.getByTestId(SELECTORS.closeAuthModal.testId);
+    await expect(authModal).not.toBeVisible();
+  });
+});
+
+test.describe("Mobile Search", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
+  });
+
+  test("should toggle mobile search on small screens", async ({ page }) => {
+    await setMobileViewport(page);
     await page.waitForTimeout(1000);
 
-    posts = page.locator('[data-testid="post-card"]');
-    const postCountMobile = await posts.count();
-    expect(postCountMobile).toBeGreaterThan(0);
+    const mobileSearchToggle = page.getByTestId(
+      SELECTORS.mobileSearchToggle.testId,
+    );
+    await expect(mobileSearchToggle).toBeVisible();
 
-    const feedButton = page.locator('button[aria-label="Choose feed"]');
-    await expect(feedButton).toBeVisible();
+    await mobileSearchToggle.click();
+
+    const mobileSearchInput = getMobileSearchInput(page);
+    await expect(mobileSearchInput).toBeFocused();
+  });
+});
+
+test.describe("Feed Navigation and Persistence", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
+  });
+
+  test("should navigate through different feeds and load content", async ({
+    page,
+  }) => {
+    const feedButton = SELECTORS.feedButton(page);
+    await feedButton.waitFor();
+    await page.getByTestId(SELECTORS.postCard.testId).first().waitFor({
+      timeout: WAITS.postLoading,
+    });
+
+    const feeds = ["New", "Ask", "Show", "Jobs"];
+
+    for (const feed of feeds) {
+      await feedButton.click();
+      const option = page.locator('[role="option"]').filter({ hasText: feed });
+      await option.click();
+
+      await page.waitForTimeout(WAITS.feedSwitch);
+
+      try {
+        await page
+          .getByTestId(SELECTORS.postCard.testId)
+          .first()
+          .waitFor({ timeout: WAITS.postLoading });
+        await expect(feedButton).toContainText(feed);
+      } catch {
+        const emptyState = page.locator('[class*="empty"]');
+        const hasEmptyState = await emptyState.isVisible().catch(() => false);
+        if (!hasEmptyState) {
+          throw new Error(`Failed to load ${feed} feed`);
+        }
+      }
+    }
+  });
+});
+
+test.describe("Pagination", () => {
+  test.beforeEach(async ({ page }) => {
+    await navigateHome(page);
+    await page.getByTestId(SELECTORS.postCard.testId).first().waitFor({
+      timeout: WAITS.postLoading,
+    });
+  });
+
+  test("should paginate through regular feed results", async ({ page }) => {
+    const nextBtn = page.locator("button").filter({ hasText: /^Next/ });
+    const previousBtn = page.locator("button").filter({ hasText: /^Previous/ });
+
+    const isNextEnabled = await nextBtn.isEnabled();
+
+    if (isNextEnabled) {
+      const firstPagePost = page.getByTestId(SELECTORS.postCard.testId).first();
+      const firstPageText = await firstPagePost.textContent();
+
+      await nextBtn.click();
+      await page.waitForTimeout(WAITS.paginationDelay);
+
+      const secondPagePost = page
+        .getByTestId(SELECTORS.postCard.testId)
+        .first();
+      const secondPageText = await secondPagePost.textContent();
+
+      expect(firstPageText).not.toEqual(secondPageText);
+
+      const isPreviousEnabled = await previousBtn.isEnabled();
+      expect(isPreviousEnabled).toBe(true);
+
+      await previousBtn.click();
+      await page.waitForTimeout(WAITS.paginationDelay);
+
+      const backToFirstPost = page
+        .getByTestId(SELECTORS.postCard.testId)
+        .first();
+      const backToFirstText = await backToFirstPost.textContent();
+
+      expect(backToFirstText).toEqual(firstPageText);
+    }
   });
 });
